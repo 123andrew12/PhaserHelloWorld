@@ -1,72 +1,90 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.0.0/dist/phaser.min.js"></script>
+    <script src="//cdn.jsdelivr.net/phaser/2.6.2/phaser.min.js"></script>
 </head>
+
 <body>
 
     <script>
-    var config = {
-        type: Phaser.AUTO,
-        width: 800,
-        height: 600,
-        physics: {
-            default: 'arcade',
-            arcade: {
-                gravity: { y: 200 }
-            }
-        },
-        scene: {
-            preload: preload,
-            create: create
+
+        var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update });
+        var leftEmitter;
+        var rightEmitter;
+        function preload() {
+            game.load.spritesheet('balls', 'balls.png', 17, 17);
+            game.load.image('ball', 'bearman.png');
+
         }
-    };
 
-    var game = new Phaser.Game(config);
+        var sprite;
 
-    function preload ()
-    {
-        this.load.setBaseURL('http://labs.phaser.io');
+        function create() {
+            
+            sprite = game.add.sprite(game.world.centerX, game.world.centerY, 'ball');
+            game.physics.enable(sprite, Phaser.Physics.ARCADE);
+            sprite.body.collideWorldBounds = true;
+	        sprite.body.bounce.setTo(1, 1);
 
-        this.load.image('sky', 'assets/skies/nebula.jpg');
-        this.load.image('logo', 'assets/sprites/melon.png');
-        this.load.image('blue', 'assets/sprites/carrot.png');
-    }
+            game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    function create ()
-    {
-        var spaceman1 = new Spaceman(null, null, 3, null);
-        this.add.image(400, 300, 'sky');
+            leftEmitter = game.add.emitter(50, game.world.centerY - 200);
+            leftEmitter.bounce.setTo(0.5, 0.5);
+            leftEmitter.setXSpeed(100, 200);
+            leftEmitter.setYSpeed(-50, 50);
+            leftEmitter.makeParticles('balls', 0, 250, true, true);
 
-        var particles = this.add.particles('blue');
+            rightEmitter = game.add.emitter(game.world.width - 50, game.world.centerY - 200);
+            rightEmitter.bounce.setTo(0.5, 0.5);
+            rightEmitter.setXSpeed(-100, -200);
+            rightEmitter.setYSpeed(-50, 50);
+            rightEmitter.makeParticles('balls', 1, 250, true, true);
 
-        var emitter = particles.createEmitter({
-            speed: 100,
-            scale: { start: 1, end: 0 },
-            blendMode: 'ADD'
-        });
-        //var logo = this.physics.add.image();
-        var logo = this.physics.add.image(0, 1000, 'logo');
+            // explode, lifespan, frequency, quantity
+            leftEmitter.start(false, 5000, 20);
+            rightEmitter.start(false, 5000, 20);
+            
+        }
 
-        logo.setVelocity(200, 387.5);
-        logo.setBounce(1, 1);
-        logo.setCollideWorldBounds(true);
+        function update() {
+            game.physics.arcade.collide(leftEmitter, rightEmitter, change, null, this);
+            game.physics.arcade.collide(sprite, leftEmitter);
+            game.physics.arcade.collide(sprite, rightEmitter);
+            //  only move when you click
+            
+                //  400 is the speed it will move towards the mouse
+                game.physics.arcade.moveToPointer(sprite, 1000);
 
-        emitter.startFollow(logo);
-    }
-    function Spaceman (position, rotation, health, currentImage) {
-        this.position = position;
-        this.rotation = rotation;
-        this.health = health;
-        this.currentImage = currentImage;
-    }
-    Spaceman.prototype.loseHealth = function() {
-        this.health--;
-    }
-    function OnClick() {
-        alert('hi');
-    }
+                //  if it's overlapping the mouse, don't move any more
+                if (Phaser.Rectangle.contains(sprite.body, game.input.x, game.input.y)) {
+                    sprite.body.velocity.setTo(0, 0);
+                }
+        
+
+        }
+
+        function change(a, b) {
+
+        a.frame = 3;
+        b.frame = 3;
+
+        }
+
+        function Spaceman(position, rotation, health, currentImage) {
+            this.position = position;
+            this.rotation = rotation;
+            this.health = health;
+            this.currentImage = currentImage;
+        }
+        Spaceman.prototype.loseHealth = function () {
+            this.health--;
+        }
+        function OnClick() {
+            alert('hi');
+        }
     </script>
 
 </body>
+
 </html>
