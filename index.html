@@ -14,14 +14,23 @@
         var rightEmitter;
         function preload() {
             game.load.spritesheet('balls', 'balls.png', 17, 17);
-            game.load.image('ball', 'bearman.png');
-
+            game.load.image('ball', 'block.png');
+            game.load.image('cup', 'pot01_0002.png', 17, 17);
+            
         }
 
         var sprite;
-
+        var cup
+        var text;
+        var count;
         function create() {
-            
+            cup = game.add.sprite(game.world.centerX, game.world.centerY, 'cup');
+            game.physics.enable(cup, Phaser.Physics.ARCADE);
+            cup.body.collideWorldBounds = true;
+	        cup.body.bounce.setTo(1, 1);
+            cup.body.immovable = true;
+            cup.body.velocity.x = 200;
+            //cup.body.allowGravity = false;
             sprite = game.add.sprite(game.world.centerX, game.world.centerY, 'ball');
             game.physics.enable(sprite, Phaser.Physics.ARCADE);
             sprite.body.collideWorldBounds = true;
@@ -45,12 +54,29 @@
             leftEmitter.start(false, 5000, 20);
             rightEmitter.start(false, 5000, 20);
             
+            count = 0;
+
+            text = game.add.text(0.35, 0.35, "Score: \n0", {
+                font: "24px Arial",
+                fill: "#ff0044",
+                align: "left"
+            });
+
+            //text.anchor.setTo(0.35, 0.35);
         }
 
         function update() {
             game.physics.arcade.collide(leftEmitter, rightEmitter, change, null, this);
             game.physics.arcade.collide(sprite, leftEmitter);
-            game.physics.arcade.collide(sprite, rightEmitter);
+            game.physics.arcade.collide(cup, leftEmitter, disappear);
+            game.physics.arcade.collide(cup, rightEmitter, disappear);
+            game.physics.arcade.collide(sprite, rightEmitter,function updateText() {
+
+            count++;
+
+            text.setText("Score: \n" + count);
+
+            });
             //  only move when you click
             
                 //  400 is the speed it will move towards the mouse
@@ -63,6 +89,14 @@
         
 
         }
+        function disappear (object1, object2) {
+        console.log(object1);
+        console.log(object2);
+        //object1.alive = false;
+        object2.kill();
+        
+
+        }
 
         function change(a, b) {
 
@@ -70,6 +104,8 @@
         b.frame = 3;
 
         }
+        
+        
 
         function Spaceman(position, rotation, health, currentImage) {
             this.position = position;
